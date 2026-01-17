@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth';
 import noticeRoutes from './routes/notices';
+import applicationRoutes from './routes/applications';
 import { testConnection } from './database/connection';
 import { HTTP_STATUS } from './utils/constants';
 
@@ -58,6 +59,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/applications', applicationRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
