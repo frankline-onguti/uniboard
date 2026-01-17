@@ -173,6 +173,134 @@ export class NoticeService {
   }
 
   /**
+   * Create new notice
+   */
+  static async createNotice(data: CreateNoticeData): Promise<NoticeWithAuthor> {
+    const client = await pool.connect();
+    
+    try {
+      const query = `
+        INSERT INTO notices (title, content, category, created_by, expires_at)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `;
+
+      const values = [
+        data.title,
+        data.content,
+        data.category,
+        data.createdBy,
+        data.expiresAt || null,
+      ];
+
+      const result = await client.query(query, values);
+      const row = result.rows[0];
+
+      // Get the notice with author information
+      return this.getNoticeById(row.id);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Update notice
+   */
+  static async updateNotice(id: string, data: UpdateNoticeData): Promise<NoticeWithAuthor | null> {
+    const client = await pool.connect();
+    
+    try {
+      const updates: string[] = [];
+      const values: any[] = [];
+      let paramCount = 0;
+
+      if (data.title !== undefined) {
+        paramCount++;
+        updates.push(`title = $${paramCount}`);
+        values.push(data.title);
+      }
+
+      if (data.content !== undefined) {
+        paramCount++;
+        updates.push(`content = $${paramCount}`);
+        values.push(data.content);
+      }
+
+      if (data.category !== undefined) {
+        paramCount++;
+        updates.push(`category = $${paramCount}`);
+        values.push(data.category);
+      }
+
+      if (data.expiresAt !== undefined) {
+        paramCount++;
+        updates.push(`expires_at = $${paramCount}`);
+        values.push(data.expiresAt);
+      }
+
+      if (data.isActive !== undefined) {
+        paramCount++;
+        updates.push(`is_active = $${paramCount}`);
+        values.push(data.isActive);
+      }
+
+      if (updates.length === 0) {
+        return this.getNoticeById(id);
+      }
+
+      paramCount++;
+      const query = `
+        UPDATE notices 
+        SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $${paramCount}
+        RETURNING *
+      `;
+      values.push(id);
+
+      const result = await client.query(query, values);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+
+      return this.getNoticeById(id);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Delete notice
+   */
+  static async deleteNotice(id: string): Promise<boolean> {
+    const client = await pool.connect();
+    
+    try {
+      const query = 'DELETE FROM notices WHERE id = $1';
+      const result = await client.query(query, [id]);
+      return result.rowCount > 0;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Check if notice has applications
+   */
+  static async hasApplications(noticeId: string): Promise<boolean> {
+    const client = await pool.connect();
+    
+    try {
+      const query = 'SELECT COUNT(*) as count FROM applications WHERE notice_id = $1';
+      const result = await client.query(query, [noticeId]);
+      return parseInt(result.rows[0].count) > 0;
+    } finally {
+      client.release();
+    }
+  }
+}
+
+  /**
    * Check if notice is available for applications
    */
   static async isNoticeAvailable(noticeId: string): Promise<boolean> {
@@ -189,4 +317,3 @@ export class NoticeService {
 
     return true;
   }
-}
