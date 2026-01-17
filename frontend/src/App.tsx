@@ -11,6 +11,8 @@ import { ApplicationsPage } from './pages/student/ApplicationsPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminNoticesPage } from './pages/admin/AdminNoticesPage';
 import { AdminApplicationsPage } from './pages/admin/AdminApplicationsPage';
+import { SuperAdminDashboard } from './pages/superAdmin/SuperAdminDashboard';
+import { UserManagementPage } from './pages/superAdmin/UserManagementPage';
 import { Unauthorized } from './pages/Unauthorized';
 
 // Role-based redirect component
@@ -25,8 +27,9 @@ const RoleBasedRedirect: React.FC = () => {
     case 'student':
       return <Navigate to="/student" replace />;
     case 'admin':
-    case 'super_admin':
       return <Navigate to="/admin" replace />;
+    case 'super_admin':
+      return <Navigate to="/super-admin" replace />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }
@@ -114,6 +117,24 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
                   <AdminApplicationsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Super Admin routes */}
+            <Route
+              path="/super-admin"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/super-admin/users"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <UserManagementPage />
                 </ProtectedRoute>
               }
             />
