@@ -5,24 +5,29 @@ import { ApplicationsFilters } from '../../components/student/ApplicationsFilter
 import { useApplications } from '../../hooks/useApplications';
 
 export const ApplicationsPage: React.FC = () => {
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected' | ''>('');
+
   const {
     applications,
     loading,
     error,
     pagination,
-    fetchApplications,
     refreshApplications,
-  } = useApplications({ status: statusFilter });
+    changePage,
+    filterByStatus,
+  } = useApplications({ autoFetch: true });
 
-  const handleStatusFilterChange = (status: string) => {
+  const handleStatusFilterChange = (status: typeof statusFilter) => {
     setStatusFilter(status);
-    fetchApplications(1, { status });
+    filterByStatus(status || undefined);
   };
 
   const handlePageChange = (page: number) => {
-    fetchApplications(page, { status: statusFilter });
+    changePage(page);
+  };
+
+  const handleRefresh = () => {
+    refreshApplications();
   };
 
   return (
@@ -37,7 +42,7 @@ export const ApplicationsPage: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={refreshApplications}
+            onClick={handleRefresh}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
           >
@@ -72,7 +77,7 @@ export const ApplicationsPage: React.FC = () => {
           error={error}
           pagination={pagination}
           onPageChange={handlePageChange}
-          onRefresh={refreshApplications}
+          onRefresh={handleRefresh}
         />
       </div>
     </StudentLayout>

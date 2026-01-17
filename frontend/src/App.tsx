@@ -7,6 +7,7 @@ import { ProtectedRoute, PublicRoute } from './components/auth/ProtectedRoute';
 import { Dashboard } from './pages/Dashboard';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import { NoticesPage } from './pages/student/NoticesPage';
+import { ApplicationsPage } from './pages/student/ApplicationsPage';
 import { Unauthorized } from './pages/Unauthorized';
 
 // Role-based redirect component
@@ -83,7 +84,7 @@ function App() {
               path="/student/applications"
               element={
                 <ProtectedRoute requiredRole="student">
-                  <div>Student Applications Page - Coming Soon</div>
+                  <ApplicationsPage />
                 </ProtectedRoute>
               }
             />
