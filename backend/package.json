@@ -13,12 +13,9 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "type-check": "tsc --noEmit",
-    "migrate": "tsx src/database/migrate.ts",
-    "migrate:run": "tsx src/database/migrate.ts run",
-    "migrate:create": "tsx src/database/migrate.ts create",
-    "migrate:rollback": "tsx src/database/migrate.ts rollback",
-    "db:setup": "npm run migrate:run && npm run db:seed",
-    "db:seed": "tsx src/database/seed.ts"
+    "db:migrate": "tsx src/scripts/migrate.ts",
+    "db:status": "tsx src/scripts/migrate.ts status",
+    "db:seed": "tsx src/scripts/seed.ts"
   },
   "keywords": [
     "university",

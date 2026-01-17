@@ -1,107 +1,54 @@
 import { Pool, PoolConfig } from 'pg';
 import dotenv from 'dotenv';
 
+// Load environment variables
 dotenv.config();
 
-interface DatabaseConfig extends PoolConfig {
-  connectionString?: string;
-}
+// Database configuration
+const config: PoolConfig = {
+  connectionString: process.env.DATABASE_URL,
+  host: process.env.DATABASE_HOST || 'localhost',
+  port: parseInt(process.env.DATABASE_PORT || '5432'),
+  database: process.env.DATABASE_NAME || 'uniboard',
+  user: process.env.DATABASE_USER || 'postgres',
+  password: process.env.DATABASE_PASSWORD || 'postgres',
+  max: 20, // Maximum number of connections
+  idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+  connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection could not be established
+};
 
-class Database {
-  private static instance: Database;
-  private pool: Pool;
+// Create connection pool
+export const pool = new Pool(config);
 
-  private constructor() {
-    const config: DatabaseConfig = {
-      connectionString: process.env.DATABASE_URL,
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432'),
-      database: process.env.DATABASE_NAME || 'uniboard',
-      user: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    };
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
-    this.pool = new Pool(config);
-
-    // Handle pool errors
-    this.pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
-      process.exit(-1);
-    });
-
-    // Log successful connection
-    this.pool.on('connect', () => {
-      console.log('📊 Connected to PostgreSQL database');
-    });
+// Test database connection
+export const testConnection = async (): Promise<void> => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    console.log('✅ Database connected successfully at:', result.rows[0].now);
+    client.release();
+  } catch (error) {
+    console.error('❌ Database connection failed:', error);
+    throw error;
   }
+};
 
-  public static getInstance(): Database {
-    if (!Database.instance) {
-      Database.instance = new Database();
-    }
-    return Database.instance;
+// Close all connections
+export const closeConnection = async (): Promise<void> => {
+  try {
+    await pool.end();
+    console.log('✅ Database connections closed');
+  } catch (error) {
+    console.error('❌ Error closing database connections:', error);
+    throw error;
   }
+};
 
-  public getPool(): Pool {
-    return this.pool;
-  }
-
-  public async query(text: string, params?: any[]): Promise<any> {
-    const start = Date.now();
-    try {
-      const result = await this.pool.query(text, params);
-      const duration = Date.now() - start;
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Executed query', { text, duration, rows: result.rowCount });
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('Database query error:', error);
-      throw error;
-    }
-  }
-
-  public async getClient() {
-    return this.pool.connect();
-  }
-
-  public async close(): Promise<void> {
-    await this.pool.end();
-    console.log('📊 Database connection closed');
-  }
-
-  // Health check method
-  public async healthCheck(): Promise<boolean> {
-    try {
-      const result = await this.query('SELECT NOW()');
-      return result.rows.length > 0;
-    } catch (error) {
-      console.error('Database health check failed:', error);
-      return false;
-    }
-  }
-
-  // Transaction helper
-  public async transaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
-    const client = await this.getClient();
-    try {
-      await client.query('BEGIN');
-      const result = await callback(client);
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-}
-
-export const database = Database.getInstance();
+// Export pool as default
+export default pool;
