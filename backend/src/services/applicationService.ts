@@ -272,4 +272,49 @@ export class ApplicationService {
       client.release();
     }
   }
+
+  /**
+   * Update application status (admin moderation)
+   */
+  static async updateApplicationStatus(
+    applicationId: string,
+    status: 'approved' | 'rejected',
+    reviewedBy: string,
+    adminNotes?: string
+  ): Promise<ApplicationModel> {
+    const client = await pool.connect();
+    
+    try {
+      const query = `
+        UPDATE applications 
+        SET 
+          status = $1,
+          reviewed_by = $2,
+          admin_notes = $3,
+          reviewed_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $4
+        RETURNING *
+      `;
+
+      const values = [status, reviewedBy, adminNotes || null, applicationId];
+      const result = await client.query(query, values);
+      const row = result.rows[0];
+
+      return {
+        id: row.id,
+        noticeId: row.notice_id,
+        studentId: row.student_id,
+        status: row.status,
+        applicationData: row.application_data,
+        adminNotes: row.admin_notes,
+        reviewedBy: row.reviewed_by,
+        reviewedAt: row.reviewed_at,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    } finally {
+      client.release();
+    }
+  }
 }

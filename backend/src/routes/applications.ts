@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ApplicationController } from '../controllers/applicationController';
-import { authenticate, requireStudent } from '../middlewares/auth';
+import { authenticate, requireStudent, requireAdminOrSuperAdmin } from '../middlewares/auth';
 import { validateUUID } from '../middlewares/validation';
 import { validateCreateApplication, validateApplicationQuery } from '../middlewares/applicationValidation';
 
@@ -19,6 +19,27 @@ router.post('/', authenticate, requireStudent, validateCreateApplication, Applic
  * @access  Private (student role required)
  */
 router.get('/me', authenticate, requireStudent, validateApplicationQuery, ApplicationController.getMyApplications);
+
+/**
+ * @route   GET /api/applications
+ * @desc    Get all applications (admin only)
+ * @access  Private (admin role required)
+ */
+router.get('/', authenticate, requireAdminOrSuperAdmin, validateApplicationQuery, ApplicationController.getAllApplications);
+
+/**
+ * @route   PATCH /api/applications/:id/approve
+ * @desc    Approve application (admin only)
+ * @access  Private (admin role required)
+ */
+router.patch('/:id/approve', authenticate, requireAdminOrSuperAdmin, validateUUID('id'), ApplicationController.approveApplication);
+
+/**
+ * @route   PATCH /api/applications/:id/reject
+ * @desc    Reject application (admin only)
+ * @access  Private (admin role required)
+ */
+router.patch('/:id/reject', authenticate, requireAdminOrSuperAdmin, validateUUID('id'), ApplicationController.rejectApplication);
 
 /**
  * @route   GET /api/applications/:id
