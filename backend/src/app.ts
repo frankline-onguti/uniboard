@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth';
+import noticeRoutes from './routes/notices';
 import { testConnection } from './database/connection';
 import { HTTP_STATUS } from './utils/constants';
 
@@ -56,6 +57,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/notices', noticeRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
