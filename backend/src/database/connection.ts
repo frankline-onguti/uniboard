@@ -10,7 +10,7 @@ const config: PoolConfig = {
   host: process.env.DATABASE_HOST || 'localhost',
   port: parseInt(process.env.DATABASE_PORT || '5432'),
   database: process.env.DATABASE_NAME || 'uniboard',
-  user: process.env.DATABASE_USER || 'te',
+  user: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'Qwe@123rty',
   max: 20, // Maximum number of connections
   idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
