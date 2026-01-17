@@ -1,36 +1,28 @@
 import React, { useState } from 'react';
 import { StudentLayout } from '../../components/student/StudentLayout';
-import { NoticesList } from '../../components/student/NoticesList';
-import { NoticesFilters } from '../../components/student/NoticesFilters';
-import { useNotices } from '../../hooks/useNotices';
+import { ApplicationsList } from '../../components/student/ApplicationsList';
+import { ApplicationsFilters } from '../../components/student/ApplicationsFilters';
+import { useApplications } from '../../hooks/useApplications';
 
-export const NoticesPage: React.FC = () => {
-  const [filters, setFilters] = useState({
-    category: '',
-    search: '',
-  });
-
+export const ApplicationsPage: React.FC = () => {
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  
   const {
-    notices,
+    applications,
     loading,
     error,
     pagination,
-    refreshNotices,
-    changePage,
-    applyFilters,
-  } = useNotices({ autoFetch: true });
+    fetchApplications,
+    refreshApplications,
+  } = useApplications({ status: statusFilter });
 
-  const handleFilterChange = (newFilters: typeof filters) => {
-    setFilters(newFilters);
-    applyFilters(newFilters);
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    fetchApplications(1, { status });
   };
 
   const handlePageChange = (page: number) => {
-    changePage(page);
-  };
-
-  const handleRefresh = () => {
-    refreshNotices();
+    fetchApplications(page, { status: statusFilter });
   };
 
   return (
@@ -39,13 +31,13 @@ export const NoticesPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Available Notices</h1>
+            <h1 className="text-2xl font-bold text-gray-900">My Applications</h1>
             <p className="text-gray-600">
-              Discover opportunities and stay updated with university announcements
+              Track the status of your submitted applications
             </p>
           </div>
           <button
-            onClick={handleRefresh}
+            onClick={refreshApplications}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
           >
@@ -67,20 +59,20 @@ export const NoticesPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <NoticesFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
+        <ApplicationsFilters
+          statusFilter={statusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
           loading={loading}
         />
 
-        {/* Notices List */}
-        <NoticesList
-          notices={notices}
+        {/* Applications List */}
+        <ApplicationsList
+          applications={applications}
           loading={loading}
           error={error}
           pagination={pagination}
           onPageChange={handlePageChange}
-          onRefresh={handleRefresh}
+          onRefresh={refreshApplications}
         />
       </div>
     </StudentLayout>

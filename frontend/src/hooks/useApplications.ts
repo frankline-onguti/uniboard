@@ -11,13 +11,11 @@ interface ApplicationsResponse {
 }
 
 interface UseApplicationsOptions {
+  status?: 'pending' | 'approved' | 'rejected';
   autoFetch?: boolean;
-  status?: string;
 }
 
 export const useApplications = (options: UseApplicationsOptions = {}) => {
-  const { autoFetch = true, status } = options;
-  
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +26,7 @@ export const useApplications = (options: UseApplicationsOptions = {}) => {
     totalPages: 0,
   });
 
-  const fetchApplications = async (page = 1, filters: { status?: string } = {}) => {
+  const fetchApplications = async (page = 1, status?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -38,8 +36,8 @@ export const useApplications = (options: UseApplicationsOptions = {}) => {
         limit: pagination.limit.toString(),
       });
 
-      if (filters.status) {
-        params.append('status', filters.status);
+      if (status) {
+        params.append('status', status);
       }
 
       const response = await apiService.get<ApplicationsResponse>(`/applications/me?${params}`);
@@ -60,14 +58,23 @@ export const useApplications = (options: UseApplicationsOptions = {}) => {
   };
 
   const refreshApplications = () => {
-    fetchApplications(pagination.page, { status });
+    fetchApplications(pagination.page, options.status);
   };
 
+  const changePage = (page: number) => {
+    fetchApplications(page, options.status);
+  };
+
+  const filterByStatus = (status?: string) => {
+    fetchApplications(1, status);
+  };
+
+  // Auto-fetch on mount if enabled
   useEffect(() => {
-    if (autoFetch) {
-      fetchApplications(1, { status });
+    if (options.autoFetch !== false) {
+      fetchApplications(1, options.status);
     }
-  }, [autoFetch, status]);
+  }, [options.status]);
 
   return {
     applications,
@@ -76,5 +83,7 @@ export const useApplications = (options: UseApplicationsOptions = {}) => {
     pagination,
     fetchApplications,
     refreshApplications,
+    changePage,
+    filterByStatus,
   };
 };

@@ -18,58 +18,58 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({ noticeId }) => {
     hasApplied: false,
   });
   const [loading, setLoading] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
+  const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Check if user has already applied
   useEffect(() => {
-    const checkApplicationStatus = async () => {
-      if (!user || user.role !== 'student') return;
-
-      try {
-        setCheckingStatus(true);
-        const response = await apiService.get<{
-          applications: Array<{
-            id: string;
-            noticeId: string;
-            status: 'pending' | 'approved' | 'rejected';
-          }>;
-        }>('/applications/me');
-
-        const existingApplication = response.applications.find(
-          app => app.noticeId === noticeId
-        );
-
-        if (existingApplication) {
-          setApplicationStatus({
-            hasApplied: true,
-            applicationId: existingApplication.id,
-            status: existingApplication.status,
-          });
-        }
-      } catch (err) {
-        console.error('Failed to check application status:', err);
-        // Don't show error for status check, just assume not applied
-      } finally {
-        setCheckingStatus(false);
-      }
-    };
-
     checkApplicationStatus();
-  }, [noticeId, user]);
+  }, [noticeId]);
+
+  const checkApplicationStatus = async () => {
+    if (!user || user.role !== 'student') return;
+
+    try {
+      setLoading(true);
+      const response = await apiService.get<{
+        applications: Array<{
+          id: string;
+          noticeId: string;
+          status: 'pending' | 'approved' | 'rejected';
+        }>;
+      }>('/applications/me?limit=100');
+
+      const existingApplication = response.applications.find(
+        app => app.noticeId === noticeId
+      );
+
+      if (existingApplication) {
+        setApplicationStatus({
+          hasApplied: true,
+          applicationId: existingApplication.id,
+          status: existingApplication.status,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to check application status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleApply = async () => {
     if (!user || user.role !== 'student') return;
 
     try {
-      setLoading(true);
+      setApplying(true);
       setError(null);
+      setSuccess(null);
 
       await apiService.post('/applications', {
         noticeId,
         applicationData: {
-          submittedAt: new Date().toISOString(),
+          appliedAt: new Date().toISOString(),
           studentInfo: {
             name: `${user.firstName} ${user.lastName}`,
             email: user.email,
@@ -78,26 +78,52 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({ noticeId }) => {
         },
       });
 
-      // Update status
       setApplicationStatus({
         hasApplied: true,
         status: 'pending',
       });
 
-      // Show success message
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-
+      setSuccess('Application submitted successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
       console.error('Application failed:', err);
       const errorMessage = err.response?.data?.error || 'Failed to submit application';
       setError(errorMessage);
       
-      // Clear error after 5 seconds
+      // Clear error message after 5 seconds
       setTimeout(() => setError(null), 5000);
     } finally {
-      setLoading(false);
+      setApplying(false);
     }
+  };
+
+  const getStatusBadge = () => {
+    if (!applicationStatus.status) return null;
+
+    const statusConfig = {
+      pending: {
+        color: 'bg-yellow-100 text-yellow-800',
+        text: 'Under Review',
+      },
+      approved: {
+        color: 'bg-green-100 text-green-800',
+        text: 'Approved',
+      },
+      rejected: {
+        color: 'bg-red-100 text-red-800',
+        text: 'Not Selected',
+      },
+    };
+
+    const config = statusConfig[applicationStatus.status];
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        {config.text}
+      </span>
+    );
   };
 
   // Don't show button for non-students
@@ -105,131 +131,74 @@ export const ApplyButton: React.FC<ApplyButtonProps> = ({ noticeId }) => {
     return null;
   }
 
-  // Loading state while checking status
-  if (checkingStatus) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="flex items-center">
-        <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+      <div className="flex items-center space-x-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+        <span className="text-sm text-gray-500">Checking status...</span>
       </div>
     );
   }
 
-  // Success message
-  if (showSuccess) {
+  // Already applied
+  if (applicationStatus.hasApplied) {
     return (
-      <div className="flex items-center text-green-600">
-        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <div className="flex items-center space-x-2">
+        <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
-        <span className="text-sm font-medium">Application submitted!</span>
+        <span className="text-sm text-gray-700">Applied</span>
+        {getStatusBadge()}
       </div>
     );
   }
 
-  // Error message
-  if (error) {
-    return (
-      <div className="flex flex-col items-end">
-        <button
-          onClick={handleApply}
-          disabled={loading}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Applying...
-            </>
-          ) : (
-            'Apply Now'
-          )}
-        </button>
-        <div className="mt-1 text-xs text-red-600 max-w-xs text-right">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  // Already applied - show status
-  if (applicationStatus.hasApplied) {
-    const getStatusDisplay = () => {
-      switch (applicationStatus.status) {
-        case 'pending':
-          return {
-            text: 'Application Pending',
-            className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            icon: (
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
-            ),
-          };
-        case 'approved':
-          return {
-            text: 'Application Approved',
-            className: 'bg-green-100 text-green-800 border-green-200',
-            icon: (
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            ),
-          };
-        case 'rejected':
-          return {
-            text: 'Application Not Selected',
-            className: 'bg-red-100 text-red-800 border-red-200',
-            icon: (
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            ),
-          };
-        default:
-          return {
-            text: 'Applied',
-            className: 'bg-gray-100 text-gray-800 border-gray-200',
-            icon: null,
-          };
-      }
-    };
-
-    const statusDisplay = getStatusDisplay();
-
-    return (
-      <div className={`inline-flex items-center px-3 py-2 border rounded-md text-sm font-medium ${statusDisplay.className}`}>
-        {statusDisplay.icon}
-        {statusDisplay.text}
-      </div>
-    );
-  }
-
-  // Apply button
   return (
-    <button
-      onClick={handleApply}
-      disabled={loading}
-      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-    >
-      {loading ? (
-        <>
-          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+    <div className="space-y-2">
+      {/* Apply Button */}
+      <button
+        onClick={handleApply}
+        disabled={applying}
+        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {applying ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Applying...
+          </>
+        ) : (
+          <>
+            <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Apply Now
+          </>
+        )}
+      </button>
+
+      {/* Success Message */}
+      {success && (
+        <div className="flex items-center space-x-2 text-sm text-green-600">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
-          Applying...
-        </>
-      ) : (
-        <>
-          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Apply Now
-        </>
+          <span>{success}</span>
+        </div>
       )}
-    </button>
+
+      {/* Error Message */}
+      {error && (
+        <div className="flex items-center space-x-2 text-sm text-red-600">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+    </div>
   );
 };
