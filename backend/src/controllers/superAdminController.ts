@@ -153,8 +153,23 @@ export class SuperAdminController {
         return;
       }
 
+      // If demoting the last super admin, prevent it
+      if (targetUser.role === 'super_admin' && role !== 'super_admin') {
+        const superAdminCount = await DatabaseService.countSuperAdmins();
+        if (superAdminCount <= 1) {
+          res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: 'Cannot demote the last super admin',
+          });
+          return;
+        }
+      }
+
       // Update user role
       const updatedUser = await DatabaseService.updateUserRole(id, role as UserRole);
+
+      // Log role change for audit
+      await DatabaseService.logRoleChange(currentUser.id, id, targetUser.role, role as UserRole);
 
       res.status(HTTP_STATUS.OK).json({
         success: true,
@@ -173,6 +188,70 @@ export class SuperAdminController {
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
         success: false,
         error: 'Failed to update user role',
+      });
+    }
+  }
+
+  /**
+   * Delete user (super admin only)
+   */
+  static async deleteUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const currentUser = req.user!;
+
+      // Only super admins can delete users
+      if (currentUser.role !== 'super_admin') {
+        res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: ERROR_MESSAGES.INSUFFICIENT_PERMISSIONS,
+        });
+        return;
+      }
+
+      // Prevent self-deletion
+      if (id === currentUser.id) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Cannot delete your own account',
+        });
+        return;
+      }
+
+      // Get target user
+      const targetUser = await DatabaseService.findUserById(id);
+      if (!targetUser) {
+        res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          error: 'User not found',
+        });
+        return;
+      }
+
+      // If deleting the last super admin, prevent it
+      if (targetUser.role === 'super_admin') {
+        const superAdminCount = await DatabaseService.countSuperAdmins();
+        if (superAdminCount <= 1) {
+          res.status(HTTP_STATUS.BAD_REQUEST).json({
+            success: false,
+            error: 'Cannot delete the last super admin',
+          });
+          return;
+        }
+      }
+
+      // Delete user
+      await DatabaseService.deleteUser(id);
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        message: 'User deleted successfully',
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: 'Failed to delete user',
       });
     }
   }

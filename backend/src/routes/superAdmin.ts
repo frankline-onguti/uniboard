@@ -20,4 +20,11 @@ router.post('/admins', authenticate, requireSuperAdmin, validateCreateAdmin, Sup
  */
 router.patch('/users/:id/role', authenticate, requireSuperAdmin, validateUUID('id'), validateRoleChange, SuperAdminController.changeUserRole);
 
+/**
+ * @route   DELETE /api/users/:id
+ * @desc    Delete user (super admin only)
+ * @access  Private (super admin role required)
+ */
+router.delete('/users/:id', authenticate, requireSuperAdmin, validateUUID('id'), SuperAdminController.deleteUser);
+
 export default router;

@@ -216,6 +216,56 @@ export class DatabaseService {
   }
 
   /**
+   * Count super admins
+   */
+  static async countSuperAdmins(): Promise<number> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        'SELECT COUNT(*) as count FROM users WHERE role = $1',
+        ['super_admin']
+      );
+      
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Log role change for audit
+   */
+  static async logRoleChange(
+    changedBy: string, 
+    targetUserId: string, 
+    oldRole: UserRole, 
+    newRole: UserRole
+  ): Promise<void> {
+    const client = await this.getClient();
+    try {
+      await client.query(
+        `INSERT INTO role_change_logs (changed_by, target_user_id, old_role, new_role, changed_at)
+         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+        [changedBy, targetUserId, oldRole, newRole]
+      );
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Delete user
+   */
+  static async deleteUser(userId: string): Promise<void> {
+    const client = await this.getClient();
+    try {
+      await client.query('DELETE FROM users WHERE id = $1', [userId]);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Update user role
    */
   static async updateUserRole(userId: string, role: UserRole): Promise<UserModel> {

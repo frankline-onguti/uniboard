@@ -54,6 +54,16 @@ CREATE TABLE refresh_tokens (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Role change audit log
+CREATE TABLE role_change_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    changed_by UUID NOT NULL REFERENCES users(id),
+    target_user_id UUID NOT NULL REFERENCES users(id),
+    old_role VARCHAR(20) NOT NULL,
+    new_role VARCHAR(20) NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Performance indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
@@ -71,6 +81,10 @@ CREATE INDEX idx_applications_created_at ON applications(created_at DESC);
 
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
+CREATE INDEX idx_role_change_logs_changed_by ON role_change_logs(changed_by);
+CREATE INDEX idx_role_change_logs_target_user ON role_change_logs(target_user_id);
+CREATE INDEX idx_role_change_logs_changed_at ON role_change_logs(changed_at DESC);
 
 -- Updated at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
