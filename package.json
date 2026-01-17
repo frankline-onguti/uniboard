@@ -1,6 +1,6 @@
 {
   "name": "uniboard",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Modern university dashboard system",
   "main": "index.js",
   "scripts": {

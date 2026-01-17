@@ -1,6 +1,6 @@
 {
   "name": "uniboard-frontend",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "UniBoard frontend React application",
   "type": "module",
   "scripts": {
