@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import noticeRoutes from './routes/notices';
 import applicationRoutes from './routes/applications';
+import superAdminRoutes from './routes/superAdmin';
 import { testConnection } from './database/connection';
 import { HTTP_STATUS } from './utils/constants';
 
@@ -60,6 +61,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/admins', superAdminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
