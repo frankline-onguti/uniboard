@@ -14,6 +14,13 @@ const router = Router();
 router.post('/admins', authenticate, requireSuperAdmin, validateCreateAdmin, SuperAdminController.createAdmin);
 
 /**
+ * @route   GET /api/users
+ * @desc    Get all users (super admin only)
+ * @access  Private (super admin role required)
+ */
+router.get('/users', authenticate, requireSuperAdmin, SuperAdminController.getAllUsers);
+
+/**
  * @route   PATCH /api/users/:id/role
  * @desc    Change user role (super admin only)
  * @access  Private (super admin role required)

@@ -216,6 +216,32 @@ export class DatabaseService {
   }
 
   /**
+   * Get all users
+   */
+  static async getAllUsers(): Promise<UserModel[]> {
+    const client = await this.getClient();
+    try {
+      const result = await client.query(
+        'SELECT * FROM users ORDER BY created_at DESC'
+      );
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        email: row.email,
+        passwordHash: row.password_hash,
+        role: row.role as UserRole,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        studentId: row.student_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }));
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Count super admins
    */
   static async countSuperAdmins(): Promise<number> {

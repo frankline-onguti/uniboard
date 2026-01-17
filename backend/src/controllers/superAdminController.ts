@@ -193,6 +193,49 @@ export class SuperAdminController {
   }
 
   /**
+   * Get all users (super admin only)
+   */
+  static async getAllUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const currentUser = req.user!;
+
+      // Only super admins can view all users
+      if (currentUser.role !== 'super_admin') {
+        res.status(HTTP_STATUS.FORBIDDEN).json({
+          success: false,
+          error: ERROR_MESSAGES.INSUFFICIENT_PERMISSIONS,
+        });
+        return;
+      }
+
+      const users = await DatabaseService.getAllUsers();
+
+      // Remove password hashes from response
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        studentId: user.studentId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }));
+
+      res.status(HTTP_STATUS.OK).json({
+        success: true,
+        data: safeUsers,
+      });
+    } catch (error) {
+      console.error('Get all users error:', error);
+      res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: 'Failed to fetch users',
+      });
+    }
+  }
+
+  /**
    * Delete user (super admin only)
    */
   static async deleteUser(req: Request, res: Response): Promise<void> {
