@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ApplicationController } from '../controllers/applicationController';
 import { authenticate, requireStudent } from '../middlewares/auth';
 import { validateUUID } from '../middlewares/validation';
+import { validateCreateApplication, validateApplicationQuery } from '../middlewares/applicationValidation';
 
 const router = Router();
 
@@ -10,14 +11,14 @@ const router = Router();
  * @desc    Submit application for a notice (students only)
  * @access  Private (student role required)
  */
-router.post('/', authenticate, requireStudent, ApplicationController.createApplication);
+router.post('/', authenticate, requireStudent, validateCreateApplication, ApplicationController.createApplication);
 
 /**
  * @route   GET /api/applications/me
  * @desc    Get current student's applications
  * @access  Private (student role required)
  */
-router.get('/me', authenticate, requireStudent, ApplicationController.getMyApplications);
+router.get('/me', authenticate, requireStudent, validateApplicationQuery, ApplicationController.getMyApplications);
 
 /**
  * @route   GET /api/applications/:id
