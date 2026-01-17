@@ -8,7 +8,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 import authRoutes from './routes/auth';
-import { DatabaseService } from './services/databaseService';
+import { testConnection } from './database/connection';
 import { HTTP_STATUS } from './utils/constants';
 
 // Load environment variables
@@ -77,7 +77,7 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 
 // Initialize database connection
 if (process.env.NODE_ENV !== 'test') {
-  DatabaseService.initialize();
+  testConnection().catch(console.error);
 }
 
 export { app };

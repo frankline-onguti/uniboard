@@ -1,26 +1,14 @@
 import { Pool, PoolClient } from 'pg';
+import pool from '../database/connection';
 import { UserModel, CreateUserData } from '../models/User';
 import { UserRole } from '../../../shared/types';
 
 export class DatabaseService {
-  private static pool: Pool;
-
-  static initialize(): void {
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432'),
-      database: process.env.DATABASE_NAME || 'uniboard',
-      user: process.env.DATABASE_USER || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'postgres',
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
-    });
-  }
-
+  /**
+   * Get database client from pool
+   */
   static async getClient(): Promise<PoolClient> {
-    return this.pool.connect();
+    return pool.connect();
   }
 
   /**
@@ -231,8 +219,7 @@ export class DatabaseService {
    * Close database connection
    */
   static async close(): Promise<void> {
-    if (this.pool) {
-      await this.pool.end();
-    }
+    // Connection is managed by the pool in database/connection.ts
+    // This method is kept for compatibility
   }
 }

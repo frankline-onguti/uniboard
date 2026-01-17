@@ -21,6 +21,14 @@ export interface CreateUserData {
   studentId?: string;
 }
 
+export interface UpdateUserData {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  studentId?: string;
+  role?: UserRole;
+}
+
 export interface UserPublic {
   id: string;
   email: string;
@@ -30,6 +38,17 @@ export interface UserPublic {
   studentId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserWithStats extends UserPublic {
+  stats?: {
+    totalApplications?: number;
+    pendingApplications?: number;
+    approvedApplications?: number;
+    rejectedApplications?: number;
+    noticesCreated?: number; // For admins
+    applicationsReviewed?: number; // For admins
+  };
 }
 
 // Role hierarchy for permission checking
@@ -59,3 +78,57 @@ export const canAccessResource = (userRole: UserRole, resourceOwnerRole: UserRol
   // Users can access their own resources (handled at application level)
   return false;
 };
+
+export const canManageUser = (currentUserRole: UserRole, targetUserRole: UserRole): boolean => {
+  // Super admin can manage everyone
+  if (currentUserRole === 'super_admin') return true;
+  
+  // Admin can manage students
+  if (currentUserRole === 'admin' && targetUserRole === 'student') return true;
+  
+  return false;
+};
+
+export const canCreateRole = (currentUserRole: UserRole, targetRole: UserRole): boolean => {
+  // Only super admin can create admins and super admins
+  if (targetRole === 'admin' || targetRole === 'super_admin') {
+    return currentUserRole === 'super_admin';
+  }
+  
+  // Admin and super admin can create students
+  if (targetRole === 'student') {
+    return currentUserRole === 'admin' || currentUserRole === 'super_admin';
+  }
+  
+  return false;
+};
+
+// Query filters
+export interface UserFilters {
+  role?: UserRole;
+  search?: string; // Search in name or email
+  isActive?: boolean;
+}
+
+export interface UserPagination {
+  page: number;
+  limit: number;
+  offset: number;
+}
+
+export interface UserQueryResult {
+  users: UserPublic[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// User statistics
+export interface UserStats {
+  totalUsers: number;
+  students: number;
+  admins: number;
+  superAdmins: number;
+  recentRegistrations: number; // Last 30 days
+}
