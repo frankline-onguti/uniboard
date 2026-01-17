@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Notice } from '../../../shared/types';
+import { Notice } from '@shared/types';
 import { ApplyButton } from './ApplyButton';
 
 interface NoticeCardProps {

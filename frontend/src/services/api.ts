@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { AuthResponse, LoginRequest, RegisterRequest, ApiResponse } from '../../../shared/types';
+import { AuthResponse, LoginRequest, RegisterRequest, ApiResponse } from '@shared/types';
 
 class ApiService {
   private api: AxiosInstance;

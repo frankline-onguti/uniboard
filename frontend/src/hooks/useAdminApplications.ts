@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { Application, ApplicationStatus } from '../../../shared/types';
+import { Application, ApplicationStatus } from '@shared/types';
 
 interface ApplicationsResponse {
   applications: Application[];

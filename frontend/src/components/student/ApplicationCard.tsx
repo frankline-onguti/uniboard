@@ -1,5 +1,5 @@
 import React from 'react';
-import { Application } from '../../../shared/types';
+import { Application } from '@shared/types';
 
 interface ApplicationCardProps {
   application: Application;

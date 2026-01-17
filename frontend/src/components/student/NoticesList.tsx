@@ -1,5 +1,5 @@
 import React from 'react';
-import { Notice } from '../../../shared/types';
+import { Notice } from '@shared/types';
 import { NoticeCard } from './NoticeCard';
 import { LoadingSkeleton } from '../shared/LoadingSkeleton';
 import { EmptyState } from '../shared/EmptyState';

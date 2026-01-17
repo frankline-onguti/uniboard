@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAdminNotices } from '../../hooks/useAdminNotices';
-import { Notice, CreateNoticeRequest } from '../../../shared/types';
+import { Notice, CreateNoticeRequest } from '@shared/types';
 
 interface NoticeFormData {
   title: string;
@@ -23,7 +23,7 @@ const NOTICE_CATEGORIES = [
 
 export const AdminNoticesPage: React.FC = () => {
   const { user, logout } = useAuth();
-  const { notices, loading, error, pagination, createNotice, updateNotice, deleteNotice, changePage, applyFilters } = useAdminNotices();
+  const { notices, loading, error, pagination, createNotice, updateNotice, deleteNotice, changePage } = useAdminNotices();
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);

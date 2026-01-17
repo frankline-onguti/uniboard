@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { Notice } from '../../shared/types';
+import { Notice } from '@shared/types';
 
 interface NoticesResponse {
   notices: Notice[];
