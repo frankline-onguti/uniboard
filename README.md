@@ -22,12 +22,10 @@ Universities need a centralized platform where students can view notices, apply 
 - **Role-Based Access**: Secure route protection and middleware
 - **Responsive UI**: Works on desktop and mobile devices
 
-### 🔧 Ready for Enhancement
+### 🔧 In Development
 
-- **Real-time Notifications**: WebSocket integration for live updates
-- **Advanced Search**: Enhanced filtering and search capabilities
-- **Analytics Dashboard**: Usage statistics and reporting
-- **Email Notifications**: Automated email system for applications
+- **Super Admin Controls**: User management and admin creation system
+- **Role Hierarchy Enforcement**: Complete enterprise-grade access control
 
 ## Tech Stack
 
@@ -150,30 +148,23 @@ uniboard/
 
 ## Releases
 
-### Released
-- **v1.1.0** (Current) - Complete UniBoard MVP
-  - Full admin dashboard with notice management
-  - Application review and moderation system
-  - Complete student and admin workflows
+### In Development
+- **v1.0.0** - Complete UniBoard MVP (Phase 6 + stabilization required)
+  - Student dashboard with authentication and applications
+  - Admin dashboard with notice management and application review
+  - Super admin controls with user management (in progress)
+  - Enterprise-grade role hierarchy enforcement
   - Production-ready core functionality
 
-- **v1.0.0** - Student Dashboard MVP
-  - Complete student authentication and dashboard
-  - Notice viewing and application submission
-  - Application status tracking
-  - Role-based access control
-
-### Planned
-- **v1.2.0** - Enhanced User Experience
+### Future Versions
+- **v1.1.0** - Enhanced User Experience
   - Real-time notifications and updates
   - Advanced search and filtering
-  - Improved mobile responsiveness
   - Performance optimizations
 
 - **v2.0.0** - Advanced Features
   - Analytics and reporting dashboard
   - Email notification system
-  - Advanced user management
   - API rate limiting and caching
 
 ## Contributing
