@@ -61,7 +61,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/applications', applicationRoutes);
-app.use('/api/admins', superAdminRoutes);
+app.use('/api', superAdminRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

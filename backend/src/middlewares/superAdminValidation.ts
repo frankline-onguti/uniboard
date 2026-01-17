@@ -48,10 +48,40 @@ const createAdminSchema = Joi.object({
 });
 
 /**
+ * Role change validation schema
+ */
+const roleChangeSchema = Joi.object({
+  role: Joi.string()
+    .valid('student', 'admin')
+    .required()
+    .messages({
+      'any.only': 'Role must be either student or admin',
+      'any.required': 'Role is required',
+    }),
+});
+
+/**
  * Validate admin creation request
  */
 export const validateCreateAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const { error } = createAdminSchema.validate(req.body);
+  
+  if (error) {
+    res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      error: error.details[0].message,
+    });
+    return;
+  }
+  
+  next();
+};
+
+/**
+ * Validate role change request
+ */
+export const validateRoleChange = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = roleChangeSchema.validate(req.body);
   
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
