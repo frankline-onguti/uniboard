@@ -1,22 +1,23 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { LoginForm } from '../components/auth/LoginForm';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 
 // Mock API service
-jest.mock('../services/api', () => ({
+vi.mock('../services/api', () => ({
   apiService: {
-    login: jest.fn(),
-    register: jest.fn(),
-    logout: jest.fn(),
-    getCurrentUser: jest.fn(),
-    setAccessToken: jest.fn(),
-    clearTokens: jest.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    getCurrentUser: vi.fn(),
+    setAccessToken: vi.fn(),
+    clearTokens: vi.fn(),
   },
 }));
 
-const { apiService } = require('../services/api');
+const { apiService } = await import('../services/api');
 
 // Test component to access auth context
 const TestComponent = () => {
@@ -53,7 +54,7 @@ const renderWithAuth = (component: React.ReactElement) => {
 
 describe('Authentication Context', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should initialize with unauthenticated state', async () => {
@@ -145,7 +146,7 @@ describe('Authentication Context', () => {
 
 describe('LoginForm', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render login form correctly', () => {
@@ -185,7 +186,7 @@ describe('LoginForm', () => {
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render children when user is authenticated', async () => {
