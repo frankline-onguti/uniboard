@@ -69,7 +69,7 @@ export const validateCreateAdmin = (req: Request, res: Response, next: NextFunct
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: error.details[0].message,
+      error: error.details?.[0]?.message || 'Validation error',
     });
     return;
   }
@@ -86,7 +86,7 @@ export const validateRoleChange = (req: Request, res: Response, next: NextFuncti
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: error.details[0].message,
+      error: error.details?.[0]?.message || 'Validation error',
     });
     return;
   }

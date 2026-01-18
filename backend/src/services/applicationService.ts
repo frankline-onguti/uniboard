@@ -262,11 +262,13 @@ export class ApplicationService {
           email: row.student_email,
           studentId: row.student_student_id,
         },
-        reviewer: row.reviewer_first_name ? {
-          firstName: row.reviewer_first_name,
-          lastName: row.reviewer_last_name,
-          email: row.reviewer_email,
-        } : undefined,
+        ...(row.reviewer_first_name && {
+          reviewer: {
+            firstName: row.reviewer_first_name,
+            lastName: row.reviewer_last_name,
+            email: row.reviewer_email,
+          }
+        }),
       };
     } finally {
       client.release();

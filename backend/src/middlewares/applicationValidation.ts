@@ -30,7 +30,7 @@ export const validateCreateApplication = (req: Request, res: Response, next: Nex
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: error.details[0].message,
+      error: error.details?.[0]?.message || 'Validation error',
     });
     return;
   }
