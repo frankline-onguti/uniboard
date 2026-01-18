@@ -319,4 +319,59 @@ export class ApplicationService {
       client.release();
     }
   }
+
+  /**
+   * Get count of student's applications (optionally filtered by status)
+   * Used for dashboard statistics
+   */
+  static async getStudentApplicationsCount(studentId: string, status?: string): Promise<number> {
+    const client = await pool.connect();
+    
+    try {
+      let query = 'SELECT COUNT(*) as count FROM applications WHERE student_id = $1';
+      const values: any[] = [studentId];
+
+      if (status) {
+        query += ' AND status = $2';
+        values.push(status);
+      }
+
+      const result = await client.query(query, values);
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get total count of all applications (for admin dashboard)
+   * Used for dashboard statistics
+   */
+  static async getTotalApplicationsCount(): Promise<number> {
+    const client = await pool.connect();
+    
+    try {
+      const query = 'SELECT COUNT(*) as count FROM applications';
+      const result = await client.query(query);
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get count of applications by status (for admin dashboard)
+   * Used for dashboard statistics
+   */
+  static async getApplicationsCountByStatus(status: string): Promise<number> {
+    const client = await pool.connect();
+    
+    try {
+      const query = 'SELECT COUNT(*) as count FROM applications WHERE status = $1';
+      const result = await client.query(query, [status]);
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
 }

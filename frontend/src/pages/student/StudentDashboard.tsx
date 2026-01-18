@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { StudentLayout } from '../../components/student/StudentLayout';
+import { apiService } from '../../services/api';
+
+interface DashboardStats {
+  activeNotices: number;
+  totalApplications: number;
+  approvedApplications: number;
+}
 
 export const StudentDashboard: React.FC = () => {
   const { user, hasRole } = useAuth();
+  const [stats, setStats] = useState<DashboardStats>({
+    activeNotices: 0,
+    totalApplications: 0,
+    approvedApplications: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   // Redirect non-students
   if (!hasRole('student')) {
@@ -14,6 +27,38 @@ export const StudentDashboard: React.FC = () => {
   if (!user) {
     return <div>Loading...</div>;
   }
+
+  // Fetch dashboard statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        console.log('=== DASHBOARD FETCH START ===');
+        setLoading(true);
+        
+        // Fetch dashboard summary from dedicated endpoint
+        const response = await apiService.get<DashboardStats>('/dashboard/student');
+        console.log('=== RAW API RESPONSE ===', response);
+        console.log('Response type:', typeof response);
+        
+        if (response && typeof response === 'object') {
+          console.log('=== UPDATING STATE ===');
+          console.log('New stats:', response);
+          setStats(response);
+          console.log('State should now be:', response);
+        } else {
+          console.error('=== API RESPONSE INVALID ===', response);
+        }
+      } catch (error) {
+        console.error('=== API ERROR ===', error);
+        // Keep default values on error
+      } finally {
+        console.log('=== SETTING LOADING FALSE ===');
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []); // Empty dependency array to run only once
 
   return (
     <StudentLayout>
@@ -41,7 +86,12 @@ export const StudentDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Active Notices</p>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loading ? '...' : stats.activeNotices}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Debug: loading={loading.toString()}, stats={JSON.stringify(stats)}
+                </p>
               </div>
             </div>
           </div>
@@ -57,7 +107,9 @@ export const StudentDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">My Applications</p>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loading ? '...' : stats.totalApplications}
+                </p>
               </div>
             </div>
           </div>
@@ -73,7 +125,9 @@ export const StudentDashboard: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Approved</p>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {loading ? '...' : stats.approvedApplications}
+                </p>
               </div>
             </div>
           </div>

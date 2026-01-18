@@ -320,4 +320,42 @@ export class NoticeService {
 
     return true;
   }
+
+  /**
+   * Get count of active notices visible to students
+   * Used for dashboard statistics
+   */
+  static async getActiveNoticesCount(): Promise<number> {
+    const client = await pool.connect();
+    
+    try {
+      const query = `
+        SELECT COUNT(*) as count
+        FROM notices
+        WHERE is_active = true
+        AND (expires_at IS NULL OR expires_at > NOW())
+      `;
+
+      const result = await client.query(query);
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Get total count of all notices (for admin dashboard)
+   * Used for dashboard statistics
+   */
+  static async getTotalNoticesCount(): Promise<number> {
+    const client = await pool.connect();
+    
+    try {
+      const query = 'SELECT COUNT(*) as count FROM notices';
+      const result = await client.query(query);
+      return parseInt(result.rows[0].count);
+    } finally {
+      client.release();
+    }
+  }
 }
