@@ -16,6 +16,8 @@ declare global {
         firstName: string;
         lastName: string;
         studentId?: string;
+        createdAt: Date;
+        updatedAt: Date;
       };
     }
   }
@@ -62,6 +64,8 @@ export const authenticate = async (
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       ...(user.studentId && { studentId: user.studentId }),
     };
 
@@ -213,6 +217,8 @@ export const optionalAuth = async (
           role: user.role,
           firstName: user.firstName,
           lastName: user.lastName,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
           ...(user.studentId && { studentId: user.studentId }),
         };
       }

@@ -88,6 +88,11 @@ export class SecurityService {
   private static loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
 
   static checkRateLimit(identifier: string, maxAttempts: number = 5, windowMs: number = 15 * 60 * 1000): boolean {
+    // Disable rate limiting in development
+    if (process.env.NODE_ENV === 'development') {
+      return true;
+    }
+    
     const now = Date.now();
     const attempts = this.loginAttempts.get(identifier);
 

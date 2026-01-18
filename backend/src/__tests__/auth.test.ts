@@ -1,18 +1,27 @@
+// Set test JWT secret BEFORE importing anything
+process.env.JWT_SECRET = 'test-secret-key';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key';
+
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import { app } from '../app';
 import { DatabaseService } from '../services/databaseService';
 import { PasswordService, SecurityService } from '../services/authService';
 import { JWTService } from '../utils/jwt';
 
-// Mock all external dependencies
+// Mock external dependencies but NOT JWTService for middleware tests
 jest.mock('../services/databaseService');
 jest.mock('../services/authService');
-jest.mock('../utils/jwt');
 
 const mockDatabaseService = DatabaseService as jest.Mocked<typeof DatabaseService>;
 const mockPasswordService = PasswordService as jest.Mocked<typeof PasswordService>;
 const mockSecurityService = SecurityService as jest.Mocked<typeof SecurityService>;
-const mockJWTService = JWTService as jest.Mocked<typeof JWTService>;
+
+// Helper to generate real JWTs for middleware tests using JWTService
+const generateRealToken = (userId: string, email: string, role: 'student' | 'admin' | 'super_admin') => {
+  // Use the actual JWTService to ensure consistency
+  return JWTService.generateAccessToken(userId, email, role);
+};
 
 describe('Authentication & Authorization', () => {
   beforeEach(() => {
@@ -27,19 +36,6 @@ describe('Authentication & Authorization', () => {
     mockSecurityService.isValidEmail.mockReturnValue(true);
     mockSecurityService.checkRateLimit.mockReturnValue(true); // Allow all requests in tests
     mockSecurityService.resetRateLimit.mockImplementation(() => {}); // No-op in tests
-    
-    mockJWTService.generateAccessToken.mockReturnValue('mock-access-token');
-    mockJWTService.generateRefreshToken.mockReturnValue('mock-refresh-token');
-    mockJWTService.verifyAccessToken.mockReturnValue({
-      userId: 'user-id-123',
-      email: 'test@university.edu',
-      role: 'student',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 900
-    });
-    mockJWTService.verifyRefreshToken.mockReturnValue({
-      userId: 'user-id-123'
-    });
   });
 
   describe('POST /api/auth/register', () => {
@@ -205,20 +201,11 @@ describe('Authentication & Authorization', () => {
         updatedAt: new Date(),
       };
 
+      // Mock database lookup for middleware
       mockDatabaseService.findUserById.mockResolvedValue(mockUser);
 
-      // First login to get token
-      mockDatabaseService.findUserByEmail.mockResolvedValue(mockUser);
-      mockDatabaseService.storeRefreshToken.mockResolvedValue();
-
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@university.edu',
-          password: 'TestPass123!',
-        });
-
-      const token = loginResponse.body.data.accessToken;
+      // Generate real JWT for middleware test
+      const token = generateRealToken(mockUser.id, mockUser.email, mockUser.role);
 
       const response = await request(app)
         .get('/api/auth/me')
@@ -255,12 +242,12 @@ describe('Authentication & Authorization', () => {
     let adminToken: string;
     let superAdminToken: string;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       // Mock users for different roles
       const studentUser = {
         id: 'student-id',
         email: 'student@university.edu',
-        passwordHash: await PasswordService.hashPassword('TestPass123!'),
+        passwordHash: 'hash',
         role: 'student' as const,
         firstName: 'Student',
         lastName: 'User',
@@ -272,7 +259,7 @@ describe('Authentication & Authorization', () => {
       const adminUser = {
         id: 'admin-id',
         email: 'admin@university.edu',
-        passwordHash: await PasswordService.hashPassword('TestPass123!'),
+        passwordHash: 'hash',
         role: 'admin' as const,
         firstName: 'Admin',
         lastName: 'User',
@@ -283,7 +270,7 @@ describe('Authentication & Authorization', () => {
       const superAdminUser = {
         id: 'superadmin-id',
         email: 'superadmin@university.edu',
-        passwordHash: await PasswordService.hashPassword('TestPass123!'),
+        passwordHash: 'hash',
         role: 'super_admin' as const,
         firstName: 'Super',
         lastName: 'Admin',
@@ -291,46 +278,21 @@ describe('Authentication & Authorization', () => {
         updatedAt: new Date(),
       };
 
-      mockDatabaseService.storeRefreshToken.mockResolvedValue();
+      // Generate real tokens using JWTService
+      studentToken = generateRealToken(studentUser.id, studentUser.email, studentUser.role);
+      adminToken = generateRealToken(adminUser.id, adminUser.email, adminUser.role);
+      superAdminToken = generateRealToken(superAdminUser.id, superAdminUser.email, superAdminUser.role);
 
-      // Login as student
-      mockDatabaseService.findUserByEmail.mockResolvedValue(studentUser);
-      mockDatabaseService.findUserById.mockResolvedValue(studentUser);
-      const studentLogin = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'student@university.edu', password: 'TestPass123!' });
-      studentToken = studentLogin.body.data.accessToken;
-
-      // Login as admin
-      mockDatabaseService.findUserByEmail.mockResolvedValue(adminUser);
-      mockDatabaseService.findUserById.mockResolvedValue(adminUser);
-      const adminLogin = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'admin@university.edu', password: 'TestPass123!' });
-      adminToken = adminLogin.body.data.accessToken;
-
-      // Login as super admin
-      mockDatabaseService.findUserByEmail.mockResolvedValue(superAdminUser);
-      mockDatabaseService.findUserById.mockResolvedValue(superAdminUser);
-      const superAdminLogin = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'superadmin@university.edu', password: 'TestPass123!' });
-      superAdminToken = superAdminLogin.body.data.accessToken;
+      // Mock database calls for /api/auth/me endpoint
+      mockDatabaseService.findUserById.mockImplementation((id: string) => {
+        if (id === 'student-id') return Promise.resolve(studentUser);
+        if (id === 'admin-id') return Promise.resolve(adminUser);
+        if (id === 'superadmin-id') return Promise.resolve(superAdminUser);
+        return Promise.resolve(null);
+      });
     });
 
     it('should allow student access to student endpoints', async () => {
-      mockDatabaseService.findUserById.mockResolvedValue({
-        id: 'student-id',
-        email: 'student@university.edu',
-        passwordHash: 'hash',
-        role: 'student',
-        firstName: 'Student',
-        lastName: 'User',
-        studentId: 'STU123456',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${studentToken}`)
@@ -340,17 +302,6 @@ describe('Authentication & Authorization', () => {
     });
 
     it('should allow admin access to admin endpoints', async () => {
-      mockDatabaseService.findUserById.mockResolvedValue({
-        id: 'admin-id',
-        email: 'admin@university.edu',
-        passwordHash: 'hash',
-        role: 'admin',
-        firstName: 'Admin',
-        lastName: 'User',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -360,17 +311,6 @@ describe('Authentication & Authorization', () => {
     });
 
     it('should allow super admin access to all endpoints', async () => {
-      mockDatabaseService.findUserById.mockResolvedValue({
-        id: 'superadmin-id',
-        email: 'superadmin@university.edu',
-        passwordHash: 'hash',
-        role: 'super_admin',
-        firstName: 'Super',
-        lastName: 'Admin',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${superAdminToken}`)
@@ -397,10 +337,12 @@ describe('Authentication & Authorization', () => {
       mockDatabaseService.findUserById.mockResolvedValue(mockUser);
       mockDatabaseService.verifyRefreshToken.mockResolvedValue(true);
 
-      // Mock refresh token in cookie
+      // Generate a real refresh token
+      const refreshToken = JWTService.generateRefreshToken(mockUser.id);
+
       const response = await request(app)
         .post('/api/auth/refresh')
-        .set('Cookie', ['refreshToken=valid-refresh-token'])
+        .set('Cookie', [`refreshToken=${refreshToken}`])
         .expect(200);
 
       expect(response.body.success).toBe(true);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, ReactNode } from 'react';
 import { User, UserRole } from '@shared/types';
 import { apiService } from '../services/api';
 
@@ -105,6 +105,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const checkingAuth = useRef(false); // Prevent multiple simultaneous auth checks
 
   // Role hierarchy for permission checking
   const roleHierarchy: Record<UserRole, number> = {
@@ -202,6 +203,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
+      // Prevent multiple simultaneous checks
+      if (checkingAuth.current) {
+        return;
+      }
+      
+      checkingAuth.current = true;
+      
       try {
         // Try to get current user (will trigger token refresh if needed)
         const user = await apiService.getCurrentUser();
@@ -214,13 +222,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           },
         });
       } catch (error) {
-        // User is not authenticated
+        // User is not authenticated - this is normal for first visit
+        console.log('User not authenticated (normal for first visit)');
         dispatch({ type: 'LOGOUT' });
+      } finally {
+        checkingAuth.current = false;
       }
     };
 
-    checkAuth();
-  }, []);
+    // Add a small delay to prevent immediate API calls
+    const timer = setTimeout(checkAuth, 100);
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array to run only once
 
   const contextValue: AuthContextType = {
     ...state,

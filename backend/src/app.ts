@@ -11,6 +11,7 @@ import authRoutes from './routes/auth';
 import noticeRoutes from './routes/notices';
 import applicationRoutes from './routes/applications';
 import superAdminRoutes from './routes/superAdmin';
+import dashboardRoutes from './routes/dashboard';
 import { testConnection } from './database/connection';
 import { HTTP_STATUS } from './utils/constants';
 
@@ -27,13 +28,15 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use(limiter);
+// Rate limiting (disabled in development)
+if (process.env.NODE_ENV === 'production') {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+  });
+  app.use(limiter);
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -61,6 +64,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', superAdminRoutes);
 
 // 404 handler

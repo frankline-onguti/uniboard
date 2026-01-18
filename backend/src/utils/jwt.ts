@@ -3,20 +3,23 @@ import { JWTPayload, UserRole } from '../../../shared/types';
 import { JWT_ACCESS_EXPIRES_IN, JWT_REFRESH_EXPIRES_IN, ERROR_MESSAGES } from './constants';
 
 export class JWTService {
-  private static accessSecret = process.env.JWT_SECRET || 'dev-access-secret';
-  private static refreshSecret = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret';
+  private static get accessSecret() {
+    return process.env.JWT_SECRET || 'dev-access-secret';
+  }
+  
+  private static get refreshSecret() {
+    return process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret';
+  }
 
   /**
    * Generate access token (short-lived)
    * Contains user claims for authorization
    */
   static generateAccessToken(userId: string, email: string, role: UserRole): string {
-    const payload: JWTPayload = {
+    const payload = {
       userId,
       email,
       role,
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (15 * 60), // 15 minutes
     };
 
     return jwt.sign(payload, this.accessSecret, {

@@ -4,6 +4,7 @@ import { AuthResponse, LoginRequest, RegisterRequest, ApiResponse } from '@share
 class ApiService {
   private api: AxiosInstance;
   private accessToken: string | null = null;
+  private isRefreshing: boolean = false; // Prevent multiple refresh attempts
 
   constructor() {
     this.api = axios.create({
@@ -33,9 +34,10 @@ class ApiService {
       async (error) => {
         const originalRequest = error.config;
 
-        // If 401 and we haven't already tried to refresh
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // If 401 and we haven't already tried to refresh and we're not already refreshing
+        if (error.response?.status === 401 && !originalRequest._retry && !this.isRefreshing) {
           originalRequest._retry = true;
+          this.isRefreshing = true;
 
           try {
             // Try to refresh token
@@ -48,10 +50,12 @@ class ApiService {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return this.api(originalRequest);
           } catch (refreshError) {
-            // Refresh failed - redirect to login
+            // Refresh failed - clear tokens but don't redirect
+            // Let React Router handle the redirect
             this.clearTokens();
-            window.location.href = '/login';
             return Promise.reject(refreshError);
+          } finally {
+            this.isRefreshing = false;
           }
         }
 
@@ -107,6 +111,11 @@ class ApiService {
 
   async put<T>(url: string, data?: any): Promise<T> {
     const response: AxiosResponse<ApiResponse<T>> = await this.api.put(url, data);
+    return response.data.data!;
+  }
+
+  async patch<T>(url: string, data?: any): Promise<T> {
+    const response: AxiosResponse<ApiResponse<T>> = await this.api.patch(url, data);
     return response.data.data!;
   }
 
