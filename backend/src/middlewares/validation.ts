@@ -12,7 +12,7 @@ const validate = (schema: Joi.ObjectSchema) => {
     if (error) {
       res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
-        error: error.details[0].message,
+        error: error.details?.[0]?.message || 'Validation error',
       });
       return;
     }
@@ -167,7 +167,7 @@ export const validateUUID = (paramName: string) => {
     const uuid = req.params[paramName];
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     
-    if (!uuidRegex.test(uuid)) {
+    if (!uuid || !uuidRegex.test(uuid)) {
       res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         error: `Invalid ${paramName} format`,
