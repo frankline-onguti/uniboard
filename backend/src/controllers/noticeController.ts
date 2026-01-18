@@ -126,7 +126,7 @@ export class NoticeController {
         content,
         category,
         createdBy: user.id,
-        expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        ...(expiresAt && { expiresAt: new Date(expiresAt) }),
       };
 
       const notice = await NoticeService.createNotice(noticeData);
@@ -185,7 +185,7 @@ export class NoticeController {
         title,
         content,
         category,
-        expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        ...(expiresAt && { expiresAt: new Date(expiresAt) }),
         isActive,
       };
 
