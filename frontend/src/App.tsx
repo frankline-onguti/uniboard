@@ -1,6 +1,5 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { ProtectedRoute, PublicRoute } from './components/auth/ProtectedRoute';
@@ -15,31 +14,31 @@ import { SuperAdminDashboard } from './pages/superAdmin/SuperAdminDashboard';
 import { UserManagementPage } from './pages/superAdmin/UserManagementPage';
 import { Unauthorized } from './pages/Unauthorized';
 
-// Role-based redirect component
-const RoleBasedRedirect: React.FC = () => {
-  const { user } = useAuth();
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  switch (user.role) {
-    case 'student':
-      return <Navigate to="/student" replace />;
-    case 'admin':
-      return <Navigate to="/admin" replace />;
-    case 'super_admin':
-      return <Navigate to="/super-admin" replace />;
-    default:
-      return <Navigate to="/unauthorized" replace />;
-  }
-};
+// Role-based redirect component (now handled by Dashboard component)
+// const RoleBasedRedirect: React.FC = () => {
+//   const { user } = useAuth();
+//   
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   
+//   switch (user.role) {
+//     case 'student':
+//       return <Navigate to="/student" replace />;
+//     case 'admin':
+//       return <Navigate to="/admin" replace />;
+//     case 'super_admin':
+//       return <Navigate to="/super-admin" replace />;
+//     default:
+//       return <Navigate to="/unauthorized" replace />;
+//   }
+// };
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
+        <div className="App min-h-screen bg-gray-50">
           <Routes>
             {/* Public routes - redirect if authenticated */}
             <Route
@@ -142,18 +141,18 @@ function App() {
             {/* Unauthorized page */}
             <Route path="/unauthorized" element={<Unauthorized />} />
 
-            {/* Default redirect based on role */}
+            {/* Default redirect - authenticated users go to dashboard, others to login */}
             <Route 
               path="/" 
               element={
-                <ProtectedRoute>
-                  <RoleBasedRedirect />
+                <ProtectedRoute redirectTo="/login">
+                  <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
 
-            {/* Catch all - redirect to dashboard */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Catch all - redirect to login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </div>
       </Router>

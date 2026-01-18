@@ -68,14 +68,6 @@ export const Unauthorized: React.FC = () => {
                 Logout
               </button>
             </div>
-
-            <div className="mt-6 text-xs text-gray-500">
-              <p>
-                🔐 Role-based access control is working correctly.
-                This page appears when users try to access resources
-                above their permission level.
-              </p>
-            </div>
           </div>
         </div>
       </div>
