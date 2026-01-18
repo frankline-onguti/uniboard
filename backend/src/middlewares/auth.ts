@@ -62,7 +62,7 @@ export const authenticate = async (
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName,
-      studentId: user.studentId,
+      ...(user.studentId && { studentId: user.studentId }),
     };
 
     next();
@@ -213,7 +213,7 @@ export const optionalAuth = async (
           role: user.role,
           firstName: user.firstName,
           lastName: user.lastName,
-          studentId: user.studentId,
+          ...(user.studentId && { studentId: user.studentId }),
         };
       }
     }
