@@ -16,4 +16,9 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   testTimeout: 10000,
+  globals: {
+    'ts-jest': {
+      useESM: false,
+    },
+  },
 };
