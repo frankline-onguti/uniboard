@@ -32,12 +32,9 @@ export interface ApplicationWithRelations extends ApplicationModel {
   reviewer?: Pick<User, 'firstName' | 'lastName' | 'email'>;
 }
 
-// Application status constants
-export const APPLICATION_STATUSES: ApplicationStatus[] = ['pending', 'approved', 'rejected'];
-
 // Validation helpers
 export const isValidStatus = (status: string): status is ApplicationStatus => {
-  return APPLICATION_STATUSES.includes(status as ApplicationStatus);
+  return ['pending', 'approved', 'rejected'].includes(status as ApplicationStatus);
 };
 
 export const canUpdateApplication = (application: ApplicationModel): boolean => {

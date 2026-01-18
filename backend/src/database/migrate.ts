@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { database } from './connection';
+import pool from './connection';
 
 interface Migration {
   id: number;
@@ -53,6 +53,10 @@ class MigrationRunner {
       }
 
       const [, idStr, name] = match;
+      if (!idStr || !name) {
+        throw new Error(`Invalid migration filename format: ${filename}`);
+      }
+      
       const id = parseInt(idStr, 10);
       const sql = fs.readFileSync(path.join(this.migrationsDir, filename), 'utf8');
 
@@ -81,22 +85,27 @@ class MigrationRunner {
     for (const migration of pendingMigrations) {
       console.log(`🔄 Running migration: ${migration.filename}`);
       
+      const client = await pool.connect();
       try {
-        await database.transaction(async (client) => {
-          // Execute migration SQL
-          await client.query(migration.sql);
-          
-          // Record migration as executed
-          await client.query(
-            'INSERT INTO migrations (name) VALUES ($1)',
-            [migration.name]
-          );
-        });
-
+        await client.query('BEGIN');
+        
+        // Execute migration SQL
+        await client.query(migration.sql);
+        
+        // Record migration as executed
+        await client.query(
+          'INSERT INTO migrations (name) VALUES ($1)',
+          [migration.name]
+        );
+        
+        await client.query('COMMIT');
         console.log(`✅ Migration completed: ${migration.filename}`);
       } catch (error) {
+        await client.query('ROLLBACK');
         console.error(`❌ Migration failed: ${migration.filename}`, error);
         throw error;
+      } finally {
+        client.release();
       }
     }
 

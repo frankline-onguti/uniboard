@@ -1,4 +1,4 @@
-import { database } from './connection';
+import pool from './connection';
 import { PasswordService } from '../services/authService';
 
 interface SeedUser {
