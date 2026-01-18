@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSuperAdmin } from '../../hooks/useSuperAdmin';
-import { User, UserRole } from '@shared/types';
+import { UserRole } from '@shared/types';
 
 interface CreateAdminFormData {
   email: string;

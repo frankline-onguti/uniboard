@@ -69,8 +69,8 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: UserRole;
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 // API Request/Response types

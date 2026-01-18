@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { apiService } from '../services/api';
 import { User, UserRole } from '@shared/types';
 
@@ -7,14 +7,6 @@ interface CreateAdminRequest {
   password: string;
   firstName: string;
   lastName: string;
-}
-
-interface UsersResponse {
-  users: User[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
 }
 
 export const useSuperAdmin = () => {
@@ -42,7 +34,7 @@ export const useSuperAdmin = () => {
   const changeUserRole = async (userId: string, role: UserRole): Promise<User> => {
     try {
       setError(null);
-      const user = await apiService.patch<User>(`/users/${userId}/role`, { role });
+      const user = await apiService.put<User>(`/users/${userId}/role`, { role });
       
       // Update user in local state
       setUsers(prev => prev.map(u => u.id === userId ? user : u));

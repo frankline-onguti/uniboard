@@ -65,7 +65,7 @@ export const useAdminApplications = (options: UseAdminApplicationsOptions = {}) 
   const approveApplication = async (id: string, adminNotes?: string): Promise<Application> => {
     try {
       setError(null);
-      const application = await apiService.post<Application>(`/applications/${id}/approve`, {
+      const application = await apiService.patch<Application>(`/applications/${id}/approve`, {
         adminNotes: adminNotes || undefined,
       });
       
@@ -89,7 +89,7 @@ export const useAdminApplications = (options: UseAdminApplicationsOptions = {}) 
         throw new Error('Admin notes are required when rejecting an application');
       }
 
-      const application = await apiService.post<Application>(`/applications/${id}/reject`, {
+      const application = await apiService.patch<Application>(`/applications/${id}/reject`, {
         adminNotes: adminNotes.trim(),
       });
       
