@@ -246,7 +246,6 @@ describe('Authentication & Authorization', () => {
         role: 'admin' as const,
         firstName: 'Admin',
         lastName: 'User',
-        studentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -258,7 +257,6 @@ describe('Authentication & Authorization', () => {
         role: 'super_admin' as const,
         firstName: 'Super',
         lastName: 'Admin',
-        studentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -319,7 +317,6 @@ describe('Authentication & Authorization', () => {
         role: 'admin',
         firstName: 'Admin',
         lastName: 'User',
-        studentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -340,7 +337,6 @@ describe('Authentication & Authorization', () => {
         role: 'super_admin',
         firstName: 'Super',
         lastName: 'Admin',
-        studentId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
