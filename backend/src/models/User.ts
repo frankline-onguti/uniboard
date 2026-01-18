@@ -35,7 +35,7 @@ export interface UserPublic {
   role: UserRole;
   firstName: string;
   lastName: string;
-  studentId?: string;
+  studentId?: string | undefined;
   createdAt: string;
   updatedAt: string;
 }
