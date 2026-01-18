@@ -10,7 +10,7 @@ export interface User {
   role: UserRole;
   firstName: string;
   lastName: string;
-  studentId?: string; // Only for students
+  studentId?: string | undefined; // Only for students
   createdAt: string;
   updatedAt: string;
 }
