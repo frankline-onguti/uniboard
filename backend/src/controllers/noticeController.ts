@@ -19,8 +19,8 @@ export class NoticeController {
 
       // Build filters based on user role
       const filters: NoticeFilters = {
-        category: category || undefined,
-        search: search || undefined,
+        ...(category && { category: category as any }),
+        ...(search && { search }),
       };
 
       // Students only see active, non-expired notices
@@ -61,6 +61,14 @@ export class NoticeController {
     try {
       const { id } = req.params;
       const user = req.user!;
+
+      if (!id) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Notice ID is required',
+        });
+        return;
+      }
 
       const notice = await NoticeService.getNoticeById(id);
 
@@ -146,6 +154,14 @@ export class NoticeController {
       const user = req.user!;
       const { title, content, category, expiresAt, isActive } = req.body;
 
+      if (!id) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Notice ID is required',
+        });
+        return;
+      }
+
       // Only admins can update notices
       if (user.role !== 'admin' && user.role !== 'super_admin') {
         res.status(HTTP_STATUS.FORBIDDEN).json({
@@ -196,6 +212,14 @@ export class NoticeController {
     try {
       const { id } = req.params;
       const user = req.user!;
+
+      if (!id) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Notice ID is required',
+        });
+        return;
+      }
 
       // Only admins can delete notices
       if (user.role !== 'admin' && user.role !== 'super_admin') {
