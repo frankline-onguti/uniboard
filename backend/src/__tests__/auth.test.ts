@@ -1,15 +1,45 @@
 import request from 'supertest';
 import { app } from '../app';
 import { DatabaseService } from '../services/databaseService';
-import { PasswordService } from '../services/authService';
+import { PasswordService, SecurityService } from '../services/authService';
+import { JWTService } from '../utils/jwt';
 
-// Mock database service
+// Mock all external dependencies
 jest.mock('../services/databaseService');
+jest.mock('../services/authService');
+jest.mock('../utils/jwt');
+
 const mockDatabaseService = DatabaseService as jest.Mocked<typeof DatabaseService>;
+const mockPasswordService = PasswordService as jest.Mocked<typeof PasswordService>;
+const mockSecurityService = SecurityService as jest.Mocked<typeof SecurityService>;
+const mockJWTService = JWTService as jest.Mocked<typeof JWTService>;
 
 describe('Authentication & Authorization', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Setup default mocks
+    mockPasswordService.hashPassword.mockResolvedValue('hashed-password');
+    mockPasswordService.isValidPassword.mockReturnValue(true);
+    mockPasswordService.verifyPassword.mockResolvedValue(true);
+    
+    mockSecurityService.sanitizeInput.mockImplementation((input: string) => input);
+    mockSecurityService.isValidEmail.mockReturnValue(true);
+    mockSecurityService.checkRateLimit.mockReturnValue(true); // Allow all requests in tests
+    mockSecurityService.resetRateLimit.mockImplementation(() => {}); // No-op in tests
+    
+    mockJWTService.generateAccessToken.mockReturnValue('mock-access-token');
+    mockJWTService.generateRefreshToken.mockReturnValue('mock-refresh-token');
+    mockJWTService.verifyAccessToken.mockReturnValue({
+      userId: 'user-id-123',
+      email: 'test@university.edu',
+      role: 'student',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 900
+    });
+    mockJWTService.verifyRefreshToken.mockReturnValue({
+      userId: 'user-id-123'
+    });
   });
 
   describe('POST /api/auth/register', () => {
