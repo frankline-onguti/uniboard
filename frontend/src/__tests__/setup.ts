@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 // Mock environment variables
 Object.defineProperty(import.meta, 'env', {
@@ -11,9 +12,9 @@ Object.defineProperty(import.meta, 'env', {
 Object.defineProperty(window, 'location', {
   value: {
     href: 'http://localhost:3000',
-    assign: jest.fn(),
-    replace: jest.fn(),
-    reload: jest.fn(),
+    assign: vi.fn(),
+    replace: vi.fn(),
+    reload: vi.fn(),
   },
   writable: true,
 });
@@ -21,6 +22,6 @@ Object.defineProperty(window, 'location', {
 // Suppress console errors in tests
 global.console = {
   ...console,
-  error: jest.fn(),
-  warn: jest.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
 };
