@@ -24,10 +24,10 @@ class DatabaseSeeder {
     console.log('🧹 Clearing existing seed data...');
     
     // Clear in reverse dependency order
-    await database.query('DELETE FROM applications WHERE 1=1');
-    await database.query('DELETE FROM refresh_tokens WHERE 1=1');
-    await database.query('DELETE FROM notices WHERE 1=1');
-    await database.query('DELETE FROM users WHERE email LIKE \'%@seed.uniboard.local\'');
+    await pool.query('DELETE FROM applications WHERE 1=1');
+    await pool.query('DELETE FROM refresh_tokens WHERE 1=1');
+    await pool.query('DELETE FROM notices WHERE 1=1');
+    await pool.query('DELETE FROM users WHERE email LIKE \'%@seed.uniboard.local\'');
     
     console.log('✅ Existing seed data cleared');
   }
@@ -88,7 +88,7 @@ class DatabaseSeeder {
     for (const user of users) {
       const passwordHash = await PasswordService.hashPassword(user.password);
       
-      const result = await database.query(
+      const result = await pool.query(
         `INSERT INTO users (email, password_hash, role, first_name, last_name, student_id)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id`,
@@ -356,7 +356,7 @@ Contact Residence Life at (555) 123-DORM or housing@university.edu.`,
         throw new Error(`User not found: ${notice.createdByEmail}`);
       }
 
-      const result = await database.query(
+      const result = await pool.query(
         `INSERT INTO notices (title, content, category, created_by, expires_at, priority)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id`,
@@ -467,7 +467,7 @@ Contact Residence Life at (555) 123-DORM or housing@university.edu.`,
         reviewedBy = userIdMap.get(app.reviewedByEmail);
       }
 
-      await database.query(
+      await pool.query(
         `INSERT INTO applications (
           notice_id, student_id, status, application_data, 
           admin_notes, reviewed_by, reviewed_at
@@ -523,7 +523,7 @@ if (require.main === module) {
       console.error('Seeding failed:', error);
       process.exit(1);
     } finally {
-      await database.close();
+      await pool.end();
     }
   })();
 }

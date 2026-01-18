@@ -26,12 +26,12 @@ class MigrationRunner {
       );
     `;
     
-    await database.query(createTableSQL);
+    await pool.query(createTableSQL);
   }
 
   // Get executed migrations from database
   private async getExecutedMigrations(): Promise<string[]> {
-    const result = await database.query('SELECT name FROM migrations ORDER BY id');
+    const result = await pool.query('SELECT name FROM migrations ORDER BY id');
     return result.rows.map((row: any) => row.name);
   }
 
@@ -142,7 +142,7 @@ class MigrationRunner {
       throw new Error('Rollback not allowed in production');
     }
 
-    const result = await database.query(
+    const result = await pool.query(
       'SELECT name FROM migrations ORDER BY id DESC LIMIT 1'
     );
 
@@ -153,7 +153,7 @@ class MigrationRunner {
 
     const lastMigration = result.rows[0].name;
     
-    await database.query('DELETE FROM migrations WHERE name = $1', [lastMigration]);
+    await pool.query('DELETE FROM migrations WHERE name = $1', [lastMigration]);
     
     console.log(`🔄 Rolled back migration: ${lastMigration}`);
     console.log('⚠️  Note: You must manually revert the database changes');
@@ -193,7 +193,7 @@ if (require.main === module) {
       console.error('Migration error:', error);
       process.exit(1);
     } finally {
-      await database.close();
+      await pool.end();
     }
   })();
 }
