@@ -102,7 +102,7 @@ export const validateCreateNotice = (req: Request, res: Response, next: NextFunc
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: error.details[0].message,
+      error: error.details?.[0]?.message || 'Validation error',
     });
     return;
   }
@@ -119,7 +119,7 @@ export const validateUpdateNotice = (req: Request, res: Response, next: NextFunc
   if (error) {
     res.status(HTTP_STATUS.BAD_REQUEST).json({
       success: false,
-      error: error.details[0].message,
+      error: error.details?.[0]?.message || 'Validation error',
     });
     return;
   }
