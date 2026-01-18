@@ -3,6 +3,7 @@ import { PasswordService, SecurityService } from '../services/authService';
 import { DatabaseService } from '../services/databaseService';
 import { HTTP_STATUS, ERROR_MESSAGES } from '../utils/constants';
 import { UserRole } from '../../../shared/types';
+import { requireParam } from '../utils/validation';
 
 export class SuperAdminController {
   /**
@@ -103,7 +104,7 @@ export class SuperAdminController {
    */
   static async changeUserRole(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = requireParam(req.params.id, 'id');
       const { role } = req.body;
       const currentUser = req.user!;
 
@@ -112,6 +113,16 @@ export class SuperAdminController {
         res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
           error: ERROR_MESSAGES.INSUFFICIENT_PERMISSIONS,
+        });
+        return;
+      }
+
+      // Get target user first to check their current role
+      const targetUser = await DatabaseService.findUserById(id);
+      if (!targetUser) {
+        res.status(HTTP_STATUS.NOT_FOUND).json({
+          success: false,
+          error: 'User not found',
         });
         return;
       }
@@ -125,26 +136,7 @@ export class SuperAdminController {
         return;
       }
 
-      // Prevent self-modification
-      if (id === currentUser.id) {
-        res.status(HTTP_STATUS.BAD_REQUEST).json({
-          success: false,
-          error: 'Cannot modify your own role',
-        });
-        return;
-      }
-
-      // Get target user
-      const targetUser = await DatabaseService.findUserById(id);
-      if (!targetUser) {
-        res.status(HTTP_STATUS.NOT_FOUND).json({
-          success: false,
-          error: 'User not found',
-        });
-        return;
-      }
-
-      // Cannot modify super_admin role
+      // Prevent changing super admin roles
       if (targetUser.role === 'super_admin') {
         res.status(HTTP_STATUS.FORBIDDEN).json({
           success: false,
@@ -153,16 +145,13 @@ export class SuperAdminController {
         return;
       }
 
-      // If demoting the last super admin, prevent it
-      if (targetUser.role === 'super_admin' && role !== 'super_admin') {
-        const superAdminCount = await DatabaseService.countSuperAdmins();
-        if (superAdminCount <= 1) {
-          res.status(HTTP_STATUS.BAD_REQUEST).json({
-            success: false,
-            error: 'Cannot demote the last super admin',
-          });
-          return;
-        }
+      // Prevent self-modification
+      if (id === currentUser.id) {
+        res.status(HTTP_STATUS.BAD_REQUEST).json({
+          success: false,
+          error: 'Cannot modify your own role',
+        });
+        return;
       }
 
       // Update user role
@@ -240,7 +229,7 @@ export class SuperAdminController {
    */
   static async deleteUser(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = requireParam(req.params.id, 'id');
       const currentUser = req.user!;
 
       // Only super admins can delete users

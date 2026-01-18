@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ApplicationService } from '../services/applicationService';
 import { NoticeService } from '../services/noticeService';
 import { HTTP_STATUS, ERROR_MESSAGES } from '../utils/constants';
+import { requireParam } from '../utils/validation';
 
 export class ApplicationController {
   /**
@@ -96,7 +97,7 @@ export class ApplicationController {
 
       const filters = {
         studentId: user.id,
-        status: status || undefined,
+        ...(status && { status: status as any }),
       };
 
       const result = await ApplicationService.getApplications(filters, { page, limit });
@@ -135,8 +136,8 @@ export class ApplicationController {
       }
 
       const filters = {
-        status: status || undefined,
-        noticeId: noticeId || undefined,
+        ...(status && { status: status as any }),
+        ...(noticeId && { noticeId }),
       };
 
       const result = await ApplicationService.getApplications(filters, { page, limit });
@@ -152,12 +153,14 @@ export class ApplicationController {
         error: 'Failed to fetch applications',
       });
     }
+  }
+
   /**
    * Get single application by ID (student can only see their own)
    */
   static async getApplicationById(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = requireParam(req.params.id, 'id');
       const user = req.user!;
 
       const application = await ApplicationService.getApplicationById(id);
@@ -206,7 +209,7 @@ export class ApplicationController {
    */
   static async approveApplication(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = requireParam(req.params.id, 'id');
       const user = req.user!;
       const { adminNotes } = req.body;
 
@@ -265,7 +268,7 @@ export class ApplicationController {
    */
   static async rejectApplication(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = requireParam(req.params.id, 'id');
       const user = req.user!;
       const { adminNotes } = req.body;
 
