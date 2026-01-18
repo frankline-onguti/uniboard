@@ -1,5 +1,5 @@
 import pool from '../database/connection';
-import { NoticeModel, NoticeFilters, NoticeQueryResult, NoticeWithAuthor } from '../models/Notice';
+import { NoticeModel, NoticeFilters, NoticeQueryResult, NoticeWithAuthor, CreateNoticeData, UpdateNoticeData } from '../models/Notice';
 
 export class NoticeService {
   /**
@@ -197,7 +197,11 @@ export class NoticeService {
       const row = result.rows[0];
 
       // Get the notice with author information
-      return this.getNoticeById(row.id);
+      const notice = await this.getNoticeById(row.id);
+      if (!notice) {
+        throw new Error('Failed to retrieve created notice');
+      }
+      return notice;
     } finally {
       client.release();
     }
@@ -278,7 +282,7 @@ export class NoticeService {
     try {
       const query = 'DELETE FROM notices WHERE id = $1';
       const result = await client.query(query, [id]);
-      return result.rowCount > 0;
+      return (result.rowCount ?? 0) > 0;
     } finally {
       client.release();
     }
@@ -298,7 +302,6 @@ export class NoticeService {
       client.release();
     }
   }
-}
 
   /**
    * Check if notice is available for applications
@@ -317,3 +320,4 @@ export class NoticeService {
 
     return true;
   }
+}
