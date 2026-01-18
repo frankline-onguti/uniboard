@@ -179,7 +179,7 @@ export class ApplicationService {
       values.push(limit, offset);
       const applicationsResult = await client.query(applicationsQuery, values);
 
-      const applications: ApplicationModel[] = applicationsResult.rows.map(row => ({
+      const applications: ApplicationWithRelations[] = applicationsResult.rows.map(row => ({
         id: row.id,
         noticeId: row.notice_id,
         studentId: row.student_id,
@@ -190,6 +190,27 @@ export class ApplicationService {
         reviewedAt: row.reviewed_at,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        // Include student details for admin view
+        student: {
+          firstName: row.student_first_name,
+          lastName: row.student_last_name,
+          email: row.student_email,
+          studentId: row.student_student_id,
+        },
+        // Include notice details
+        notice: {
+          title: row.notice_title,
+          category: row.notice_category,
+          expiresAt: row.notice_expires_at,
+        },
+        // Include reviewer details if available
+        ...(row.reviewer_first_name && {
+          reviewer: {
+            firstName: row.reviewer_first_name,
+            lastName: row.reviewer_last_name,
+            email: row.reviewer_email,
+          }
+        }),
       }));
 
       const totalPages = Math.ceil(total / limit);

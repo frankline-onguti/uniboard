@@ -66,7 +66,7 @@ export interface ApplicationPagination {
 }
 
 export interface ApplicationQueryResult {
-  applications: ApplicationModel[];
+  applications: ApplicationWithRelations[];
   total: number;
   page: number;
   limit: number;
