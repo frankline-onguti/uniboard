@@ -10,10 +10,11 @@ process.env.JWT_SECRET = 'test-jwt-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
 
 // Mock console methods to reduce noise in tests
+const mockFn = () => {};
 global.console = {
   ...console,
-  log: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
+  log: mockFn,
+  error: mockFn,
+  warn: mockFn,
+  info: mockFn,
 };
